@@ -124,6 +124,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             self.imagePickerController?.sourceType = .photoLibrary
             self.imagePickerController?.mediaTypes = ["public.movie"]
             self.imagePickerController?.videoQuality = UIImagePickerController.QualityType.typeHigh
+            self.imagePickerController?.videoExportPreset = AVAssetExportPresetPassthrough
             self.present(self.imagePickerController!, animated: true, completion: nil)
         }
     }
