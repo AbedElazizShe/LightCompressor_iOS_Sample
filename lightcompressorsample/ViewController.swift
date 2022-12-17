@@ -61,57 +61,53 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let startingPoint = Date()
         let videoCompressor = LightCompressor()
         
-        compression = videoCompressor.compressVideo(source: videoToCompress,
-                                                   destination: destinationPath as URL,
-                                                   quality: .medium,
-                                                   isMinBitRateEnabled: true,
-                                                   keepOriginalResolution: false,
-                                                   progressQueue: .main,
-                                                   progressHandler: { progress in
-                                                    DispatchQueue.main.async { [unowned self] in
-                                                        self.progressBar.progress = Float(progress.fractionCompleted)
-                                                        self.progressLabel.text = "\(String(format: "%.0f", progress.fractionCompleted * 100))%"
-                                                    }},
-                                                   
-                                                   completion: {[weak self] result in
-                                                    guard let `self` = self else { return }
+        compression = videoCompressor.compressVideo(videos: [.init(source: videoToCompress, destination: destinationPath, configuration: .init(quality: VideoQuality.very_high, videoBitrateInMbps: 5, disableAudio: false, keepOriginalResolution: false, videoSize: CGSize(width: 360, height: 480) ))],
+                                                    progressQueue: .main,
+                                                    progressHandler: { progress in
+            DispatchQueue.main.async { [unowned self] in
+                self.progressBar.progress = Float(progress.fractionCompleted)
+                self.progressLabel.text = "\(String(format: "%.0f", progress.fractionCompleted * 100))%"
+            }},
                                                     
-                                                    switch result {
-                                                        
-                                                    case .onSuccess(let path):
-                                                        self.compressedPath = path
-                                                        DispatchQueue.main.async { [unowned self] in
-                                                            self.sizeAfterCompression.isHidden = false
-                                                            self.duration.isHidden = false
-                                                            self.progressBar.isHidden = true
-                                                            self.progressLabel.isHidden = true
-                                                            
-                                                            self.sizeAfterCompression.text = "Size after compression: \(path.fileSizeInMB())"
-                                                            self.duration.text = "Duration: \(String(format: "%.2f", startingPoint.timeIntervalSinceNow * -1)) seconds"
-                                                            
-                                                            PHPhotoLibrary.shared().performChanges({
-                                                                PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: path)
-                                                            })
-                                                        }
-                                                        
-                                                    case .onStart:
-                                                        self.progressBar.isHidden = false
-                                                        self.progressLabel.isHidden = false
-                                                        self.sizeAfterCompression.isHidden = true
-                                                        self.duration.isHidden = true
-                                                        //self.originalSize.visiblity(gone: false)
-                                                        
-                                                    case .onFailure(let error):
-                                                        self.progressBar.isHidden = true
-                                                        self.progressLabel.isHidden = false
-                                                        self.progressLabel.text = (error as! CompressionError).title
-                                                        
-                                                        
-                                                    case .onCancelled:
-                                                        print("---------------------------")
-                                                        print("Cancelled")
-                                                        print("---------------------------")
-                                                    }
+                                                    completion: {[weak self] result in
+            guard let `self` = self else { return }
+            
+            switch result {
+                
+            case .onSuccess(let index, let path):
+                self.compressedPath = path
+                DispatchQueue.main.async { [unowned self] in
+                    self.sizeAfterCompression.isHidden = false
+                    self.duration.isHidden = false
+                    self.progressBar.isHidden = true
+                    self.progressLabel.isHidden = true
+                    
+                    self.sizeAfterCompression.text = "Size after compression: \(path.fileSizeInMB())"
+                    self.duration.text = "Duration: \(String(format: "%.2f", startingPoint.timeIntervalSinceNow * -1)) seconds"
+                    
+                    PHPhotoLibrary.shared().performChanges({
+                        PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: path)
+                    })
+                }
+                
+            case .onStart:
+                self.progressBar.isHidden = false
+                self.progressLabel.isHidden = false
+                self.sizeAfterCompression.isHidden = true
+                self.duration.isHidden = true
+                //self.originalSize.visiblity(gone: false)
+                
+            case .onFailure(let index, let error):
+                self.progressBar.isHidden = true
+                self.progressLabel.isHidden = false
+                self.progressLabel.text = (error as! CompressionError).title
+                
+                
+            case .onCancelled:
+                print("---------------------------")
+                print("Cancelled")
+                print("---------------------------")
+            }
         })
         
     }
